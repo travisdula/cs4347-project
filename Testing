@@ -1,10 +1,10 @@
 USE mydb;
 
 INSERT INTO Customer VALUES	(69420, "Daniel Yahalom", DATE '2021-4-3', "659-535-5725", "dxy190011@utdallas.edu", "1234************"),
-							(12345, "Noah Fornero", DATE '2001-4-3', "469-420-6969", "nmf190000@utdallas.edu", "1324************"),
-							(54321, "Gaurav Wadhwa", DATE '2001-10-30', "123-456-7891", "blahblah@utdallas.edu", "5555************"),
-                            (16256, "Travis Dula", DATE '2002-12-16', "987-999-9099", "travis@utdallas.edu", "1612************"),
-                            (43470, "Ke Su", DATE '2000-4-3', "546-345-2856", "kxs130330@utdallas.edu", "9876************");
+				(12345, "Noah Fornero", DATE '2001-4-3', "469-420-6969", "nmf190000@utdallas.edu", "1324************"),
+				(54321, "Gaurav Wadhwa", DATE '2001-10-30', "123-456-7891", "blahblah@utdallas.edu", "5555************"),
+				(16256, "Travis Dula", DATE '2002-12-16', "987-999-9099", "travis@utdallas.edu", "1612************"),
+				(43470, "Ke Su", DATE '2000-4-3', "546-345-2856", "kxs130330@utdallas.edu", "9876************");
 
 INSERT INTO Gate VALUES(4556,"C09");
 INSERT INTO Gate VALUES(7858,"B02");
