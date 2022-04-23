@@ -46,8 +46,8 @@ class Login extends React.Component
               <p>Welcome to the airport database! Please log in to perform actions, or continuie as guest. You might be required to register to pursue some actions.</p>
               <form>
                 <label>CID: </label>
-                <input value={this.state.stringID} onChange={this.handleChange} type={"text"}></input>
-                <input type={"submit"}></input>
+                <input className='usernameInput' value={this.state.stringID} onChange={this.handleChange} type={"text"}></input>
+                <input className='submitButton' type={"submit"}></input>
               </form>
               <p><span onClick={this.continueAsGuest}>Continue as guest</span></p>
           </div>
