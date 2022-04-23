@@ -1,3 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 body {
-    font-family: sans-serif;
+    @apply font-sans text-center text-base;
+}
+
+form {
+    @apply py-2 ;
+}
+
+.usernameInput {
+    @apply border-2 border-gray-500 active:border-black px-2 mx-1 rounded-full;
+}
+
+.submitButton {
+    @apply bg-blue-500 hover:bg-blue-700 text-white font-bold text-sm py-1 px-4 rounded-full mx-1;
 }
