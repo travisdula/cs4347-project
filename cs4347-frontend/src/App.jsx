@@ -1,12 +1,13 @@
 import React from 'react';
 import Login from './Login';
+import Test from './test';
 
 
 class App extends React.Component {
 
   constructor(props) {
     super(props);
-    this.state = {id: 0};
+    this.state = {id: null};
 
     this.setID = this.setID.bind(this);
   }
@@ -18,9 +19,14 @@ class App extends React.Component {
   }
 
   render() {
+
+    let login = (<Login setID={this.setID}/>);
+    let test = (<Test />);
+
     return (
       <div className='App'>
-        <Login setID={this.setID}/>
+        {this.state.id == null && login }
+        {this.state.id != null && test}
         <p>current ID: {this.state.id}</p>
       </div>
     );
