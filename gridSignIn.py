@@ -229,14 +229,13 @@ class Ticket:
     CID: int
     Flight_Info: int
 
-
 class TicketFrame:
     ticketObj: Ticket
     root: tk.Frame
     TID_Info: ttk.Label
     CID_Info: ttk.Label
     Flight_Info: ttk.Label
-
+    
     def __init__(self, root, ticketObj: Ticket):
         self.ticketObj = ticketObj
         self.root = root
@@ -245,6 +244,7 @@ class TicketFrame:
         self.CID_Info = ttk.Label(self.root, text=ticketObj.CID)
         self.Flight_Info = ttk.Label(self.root, text=ticketObj.Flight_Info)
 
+    #add this ticket frame to the grid
     def grid(self, row):
         self.row = row
 
@@ -252,68 +252,25 @@ class TicketFrame:
         self.CID_Info.grid(column=1, row=row, sticky=tk.EW, padx=5, pady=5)
         self.Flight_Info.grid(column=2, row=row, sticky=tk.EW, padx=5, pady=5)
 
+    #forget this ticket frame and remove it from the grid
+    def grid_forget(self):
+        self.TID_Info.grid_forget()
+        self.CID_Info.grid_forget()
+        self.Flight_Info.grid_forget()
 
-class MyTickets(tk.Frame):  # Sub-lcassing tk.Frame
+class MyTickets(tk.Frame): # Sub-lcassing tk.Frame
 
-    payment_entry: ttk.Label
-
-    def retreiveTickets(self, info):
-        self.tickets = []
-        self.ticketFrames = []
-
-        # create tickets and ticketFrames
-        num = 1
-        for i in info:
-            num = num + 1
-            newTicket = Ticket(i[0], i[1], i[2])
-            self.tickets.append(newTicket)
-
-            newTicketFrame = TicketFrame(root=self, ticketObj=newTicket)
-            newTicketFrame.grid(row=num)
-            self.ticketFrames.append(newTicketFrame)
-
-    # returns the current value for num
-    def renderTickets(self):
-
-        num = 1
-        for ticketFrame in self.ticketFrames:
-            num = num + 1
-            ticketFrame.grid(row=num)
-        return num
-
-    def render(self, refreshPaymentInfo=False):
-
-        if(refreshPaymentInfo):
-            self.payment_label.destroy()
-            self.payment_entry.destroy()
-            self.view_all_flights.destroy()
-            self.view_my_tickets.destroy()
-
-        #render all the tickets!
-        num = self.renderTickets()
-        print(num)
-        self.payment_label = ttk.Label(self, text="Cancel Ticket (Tid):")
-        self.payment_label.grid(column=0, row=num+1, sticky=tk.EW, padx=5, pady=5)
-
-        self.payment_entry = ttk.Entry(self)
-        self.payment_entry.grid(column=1, row=num+1, columnspan=3, sticky=tk.EW, padx=5, pady=5)
-
-        #Go back to home screen
-        self.view_all_flights = ttk.Button(self, text="Go Back", command=lambda: self.master.switch_Canvas(homescreen))
-        self.view_all_flights.grid(column=2, row=num+2, sticky=tk.EW, padx=5, pady=5, ipadx=2, ipady=2)
-
-        #Remove ticket based on given TID
-        self.view_my_tickets = ttk.Button(self, text="Submit Cancellation", command= lambda: self.submit_cancel())
-        self.view_my_tickets.grid(column=1, row=num+2, sticky=tk.EW, padx=5, pady=5, ipadx=2, ipady=2)
+    ticketFrames : list
 
     def __init__(self, master, *args, **kwargs):
-        # self is now an istance of tk.Frame
-        tk.Frame.__init__(self, master, *args, **kwargs)
 
-        # welcome user label
+        tk.Frame.__init__(self,master, *args, **kwargs)
+
+        #welcome label
         welcome_label = ttk.Label(self, text=f"Your Tickets")
         welcome_label.grid(column=1, row=0, columnspan=4, sticky=tk.EW)
 
+        #table headers
         TID_label = ttk.Label(self, text="TID")
         TID_label.grid(column=0, row=1, sticky=tk.EW, padx=5, pady=5)
         CID_label = ttk.Label(self, text="CID")
@@ -321,34 +278,62 @@ class MyTickets(tk.Frame):  # Sub-lcassing tk.Frame
         Flight_label = ttk.Label(self, text="Flight Number")
         Flight_label.grid(column=2, row=1, sticky=tk.EW, padx=5, pady=5)
 
-        # mySQL stuff
+        #mySQL stuff - query TB to receive tickets
         mycursor.execute(f"Select * from Ticket where Cid = {newID}")
         info = mycursor.fetchall()
 
-        # generate all the tickets!
+        #generate all the tickets!
         self.retreiveTickets(info)
 
-        self.render()
+        #render all the tickets and the cancel ticket fields
+        curr_row = 1
+        for ticketFrame in self.ticketFrames:
+            curr_row = curr_row+1
+            ticketFrame.grid(row=curr_row)
+
+        #Cancel ticket section
+        cancel_ticket_label = ttk.Label(self, text="Cancel Ticket (Tid):")
+        cancel_ticket_label.grid(column=0, row=curr_row+1, sticky=tk.EW, padx=5, pady=5)
+
+        #field to type tid
+        self.cancel_tid_entry = ttk.Entry(self)
+        self.cancel_tid_entry.grid(column=1, row=curr_row+1, columnspan=3, sticky=tk.EW, padx=5, pady=5)
+
+        #Remove ticket based on given TID
+        cancel_ticket_button = ttk.Button(self, text="Submit Cancellation", command= lambda: self.submit_cancel())
+        cancel_ticket_button.grid(column=1, row=curr_row+2, sticky=tk.EW, padx=5, pady=5, ipadx=2, ipady=2)
+        
+        #Go back to home screen
+        go_back_button = ttk.Button(self, text="Go Back", command=lambda: self.master.switch_Canvas(homescreen))
+        go_back_button.grid(column=2, row=curr_row+2, sticky=tk.EW, padx=5, pady=5, ipadx=2, ipady=2)
+
+
+        self.grid(column=0, row=2, columnspan=3)   
+
+    #takes the tuples returned by an SQL query and converts them to valid ticketFrame objects
+    def retreiveTickets(self, info):
+        self.ticketFrames = []
+
+        #create tickets and ticketFrames
+        for i in info:
+
+            newTicket = Ticket(i[0], i[1], i[2])
+
+            newTicketFrame = TicketFrame(root=self, ticketObj=newTicket)
+            self.ticketFrames.append(newTicketFrame)
 
     def submit_cancel(self):
-        cancel_TID = self.payment_entry.get()
+        cancel_TID = self.cancel_tid_entry.get()
 
-        # mySQL stuff
+        #mySQL - delete the current ticket from the database, add the corresponding spot back to the flight!
+        #TODO: add back the spot to the flight!
         mycursor.execute(f"DELETE FROM Ticket WHERE Tid = {cancel_TID}")
         mydb.commit()
 
-        # generate new tickets list
-
-        # mySQL stuff
-        mycursor.execute(f"Select * from Ticket where Cid = {newID}")
-        info = mycursor.fetchall()
-        self.retreiveTickets(info)
-
-        # re-render thing
-        self.render(refreshPaymentInfo=True)
-
-        # re-render thing
-        self.render()
+        for row, i in enumerate(self.ticketFrames):
+            if(i.ticketObj.TID == cancel_TID):
+                self.ticketFrames[row].grid_forget()
+                del self.ticketFrames[row]
 
 @dataclass
 class Flight():
