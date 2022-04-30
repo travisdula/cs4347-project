@@ -57,14 +57,14 @@ CREATE TABLE IF NOT EXISTS `test`.`Customer` (
   `Email` VARCHAR(45) NOT NULL,
   `Payment_Information` VARCHAR(45) NULL CHECK(Payment_Information REGEXP '[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'),
   PRIMARY KEY (`Cid`),
-  UNIQUE INDEX `Cid_UNIQUE` (`Cid` ASC) VISIBLE)
+  UNIQUE INDEX `Cid_UNIQUE` (`Cid` ASC))
 ENGINE = InnoDB;
 
 CREATE TABLE IF NOT EXISTS `test`.`Gate` (
   `Gid` INT NOT NULL,
   `Gate_num` VARCHAR(3) NOT NULL CHECK(Gate_num REGEXP '[A-Z][0-9][0-9]'),
   PRIMARY KEY (`Gid`),
-  UNIQUE INDEX `Gid_UNIQUE` (`Gid` ASC) VISIBLE)
+  UNIQUE INDEX `Gid_UNIQUE` (`Gid` ASC))
 ENGINE = InnoDB;
 
 CREATE TABLE IF NOT EXISTS `test`.`Pilot` (
@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS `test`.`Pilot` (
   `Pname` VARCHAR(45) NOT NULL,
   `Availability` BIT NOT NULL COMMENT 'True: Means pilot is available to fly\nFalse: Means pilot is not available to fly',
   PRIMARY KEY (`Pid`),
-  UNIQUE INDEX `Pid_UNIQUE` (`Pid` ASC) VISIBLE)
+  UNIQUE INDEX `Pid_UNIQUE` (`Pid` ASC))
 ENGINE = InnoDB;
 
 CREATE TABLE IF NOT EXISTS `test`.`Flight` (
@@ -83,9 +83,9 @@ CREATE TABLE IF NOT EXISTS `test`.`Flight` (
   `Spots_Available` INT NOT NULL CHECK (Spots_Available >= 0),
   `Pid` INT NOT NULL,
   `Gid` INT NOT NULL,
-  UNIQUE INDEX `Flight_num_UNIQUE` (`Flight_num` ASC) VISIBLE,
-  INDEX `Pid_idx` (`Pid` ASC) VISIBLE,
-  INDEX `Gid_idx` (`Gid` ASC) VISIBLE,
+  UNIQUE INDEX `Flight_num_UNIQUE` (`Flight_num` ASC),
+  INDEX `Pid_idx` (`Pid` ASC) ,
+  INDEX `Gid_idx` (`Gid` ASC) ,
   PRIMARY KEY (`Flight_num`),
   CONSTRAINT `Gid`
     FOREIGN KEY (`Gid`)
@@ -102,9 +102,9 @@ CREATE TABLE IF NOT EXISTS `test`.`Ticket` (
   `Cid` INT NOT NULL,
   `Flight_num` INT NOT NULL,
   PRIMARY KEY (`Tid`),
-  UNIQUE INDEX `Tid_UNIQUE` (`Tid` ASC) VISIBLE,
-  INDEX `Cid_idx` (`Cid` ASC) VISIBLE,
-  INDEX `Flight_num_idx` (`Flight_num` ASC) VISIBLE,
+  UNIQUE INDEX `Tid_UNIQUE` (`Tid` ASC) ,
+  INDEX `Cid_idx` (`Cid` ASC),
+  INDEX `Flight_num_idx` (`Flight_num` ASC) ,
   CONSTRAINT `Cid`
     FOREIGN KEY (`Cid`)
     REFERENCES `test`.`Customer` (`Cid`)
@@ -142,20 +142,19 @@ INSERT INTO Flight VALUES(1612, TIME '00:00', DATE '2022-7-4', "IIA", 12, 3512, 
 INSERT INTO Flight VALUES(4279, TIME '9:30', DATE '2022-9-5', "XYD", 29, 9346, 7858);
 INSERT INTO Flight VALUES(4595, TIME '9:30', DATE '2022-4-3', "DFW", 0, 9346, 7858);
 
-INSERT INTO Ticket VALUES(1, 43470, 1612);
-INSERT INTO Ticket VALUES(2, 43470, 1612);
-INSERT INTO Ticket VALUES(10, 43470, 1612);
 INSERT INTO Ticket VALUES(15, 12345, 1612);
-INSERT INTO Ticket VALUES(17, 43470, 8712);
-INSERT INTO Ticket VALUES(20, 43470, 4279);
 INSERT INTO Ticket VALUES(5, 16256, 9457);
-INSERT INTO Ticket VALUES(9, 43470, 8712);
-INSERT INTO Ticket VALUES(8, 43470, 9457);
 INSERT INTO Ticket VALUES(12, 54321, 1612);
 INSERT INTO Ticket VALUES(69, 69420, 1612);
+INSERT INTO Ticket VALUES(1, 43470, 1612);
+INSERT INTO Ticket VALUES(2, 43470, 1612);
 INSERT INTO Ticket VALUES(3, 43470, 4279);
+INSERT INTO Ticket VALUES(8, 43470, 9457);
+INSERT INTO Ticket VALUES(9, 43470, 8712);
+INSERT INTO Ticket VALUES(10, 43470, 1612);
+INSERT INTO Ticket VALUES(17, 43470, 8712);
+INSERT INTO Ticket VALUES(20, 43470, 4279);
 INSERT INTO Ticket VALUES(91, 43470, 4595);
-
 /*
 	These queries show the tables
 */
@@ -196,6 +195,23 @@ FROM Flight F
 WHERE F.Spots_available > 0;
 SELECT * FROM AvailableFlights;
 
+Create VIEW TicketsByCID AS
+Select COUNT(T.Tid), C.Cid
+FROM Ticket T, Customer C
+WHERE T.Cid = C.Cid
+GROUP BY C.Cid;
+SELECT * FROM TicketsByCID;
+
+DROP VIEW TicketsByCID;
+
+Create VIEW FlightsByGate AS
+Select COUNT(F.Flight_num), G.Gate_num
+FROM Flight F, Gate G
+WHERE F.Gid = G.Gid
+GROUP BY G.Gate_num;
+SELECT * FROM FlightsByGate;
+
+DROP VIEW FlightsByGate;
 /*
 	Queries
 */
