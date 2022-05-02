@@ -7,16 +7,18 @@ import re
 import mysql.connector
 from dataclasses import dataclass
 
-mydb = mysql.connector.connect(host="localhost", user="root", passwd="Testing#1", database="test")
+mydb = mysql.connector.connect(host="localhost", user="root", passwd="12345", database="test", auth_plugin='mysql_native_password')
 
 mycursor = mydb.cursor()
 
 newID = "12345"
 
+
 def random_cid():
     global newID
     newID = random.randint(10000, 99999)
     return newID
+
 
 class SampleApp(tk.Tk):
     def __init__(self):
@@ -34,15 +36,7 @@ class SampleApp(tk.Tk):
         if self._mainCanvas:
             self._mainCanvas.pack_forget()
 
-        # is the Class type passed one we have seen before?
-        canvas = self._allCanvases.get(Canvas_class, False)
-
-        # if Canvas_class is a new class type, canvas is False
-        if not canvas:
-            # Instantiate the new class
-            canvas = Canvas_class(self)
-            # Store it's type in the dictionary
-            self._allCanvases[Canvas_class] = canvas
+        canvas = Canvas_class(self)
 
         # Pack the canvas or self._mainCanvas (these are all frames)
         canvas.pack(pady=60)
@@ -51,24 +45,36 @@ class SampleApp(tk.Tk):
 
 
 class StartUpPage(tk.Canvas):
+
+    def validateCID(self, input):
+        # check if the CID matches any CID
+        mycursor.execute(f"SELECT Cid FROM Customer WHERE Cid = {input}")
+        if(len(mycursor.fetchall()) < 1):
+            print("not a valid CID!")
+            return;
+        else:
+            global newID
+            newID = input
+            self.master.switch_Canvas(homescreen)
+
     def __init__(self, master, *args, **kwargs):
         tk.Canvas.__init__(self, master, *args, **kwargs)
         tk.Frame(self)
         greeting = ttk.Label(self,
-                             text="Welcome to the airport database! Please log in to perform actions, or create an account. ").grid(column=0, row=0)
-        greeting2 = ttk.Label(self, text="You might be required to register to pursue some actions.").grid(column=0, row=1)
+                             text="Welcome to the airport database! Please log in to perform actions, or create an account. ").grid(
+            column=0, row=0)
+        greeting2 = ttk.Label(self, text="You might be required to register to pursue some actions.").grid(column=0,
+                                                                                                           row=1)
         loginPrompt = ttk.Label(self, text="Enter Customer ID: ").grid(column=0, row=2)
         text = tk.StringVar()
         entry1 = ttk.Entry(self, textvariable=text).grid(column=0, row=3)
 
-        def getRandomCID():
-            global newID
-            newID = text.get()
+        submit = ttk.Button(self, text="Submit",
+                            command=lambda: self.validateCID(text.get())).grid(
+            column=0, row=4, pady=7)
 
-        submit = ttk.Button(self, text="Submit", command=lambda: [getRandomCID(), master.switch_Canvas(homescreen)]).grid(
-            column=0, row=4, pady= 7)
-
-        createAccount = ttk.Button(self, text="Create Account", command=lambda: master.switch_Canvas(create_Account)).grid(
+        createAccount = ttk.Button(self, text="Create Account",
+                                   command=lambda: master.switch_Canvas(create_Account)).grid(
             column=0, row=5)
 
 
@@ -130,7 +136,8 @@ class create_Account(tk.Frame):
             mydb.commit()
 
         # submit button
-        submit_button = ttk.Button(self, text="Submit", command=lambda: [submit_info(), master.switch_Canvas(homescreen)])
+        submit_button = ttk.Button(self, text="Submit",
+                                   command=lambda: [submit_info(), master.switch_Canvas(homescreen)])
         submit_button.grid(column=3, row=5, columnspan=2, sticky=tk.EW, padx=5, pady=5)
 
         # go back button
@@ -149,7 +156,8 @@ class homescreen(tk.Canvas):  # Sub-lcassing tk.Frame
         welcome_label.grid(column=0, row=0, columnspan=4)
 
         # view all flights button
-        view_all_flights = ttk.Button(self, text="View All Flights", command=lambda: master.switch_Canvas(flightListFrame))
+        view_all_flights = ttk.Button(self, text="View All Flights",
+                                      command=lambda: master.switch_Canvas(flightListFrame))
         view_all_flights.grid(column=0, row=1, sticky=tk.EW, padx=5, pady=5, ipadx=2, ipady=2)
 
         # view my information
@@ -157,7 +165,8 @@ class homescreen(tk.Canvas):  # Sub-lcassing tk.Frame
         view_my_info.grid(column=1, row=1, sticky=tk.EW, padx=5, pady=5, ipadx=2, ipady=2)
 
         # search for flights using flight code
-        search_flights = ttk.Button(self, text="Search for Flights Using Code", command=lambda: master.switch_Canvas(flightListSearchFrame))
+        search_flights = ttk.Button(self, text="Search for Flights Using Code",
+                                    command=lambda: master.switch_Canvas(flightListSearchFrame))
         search_flights.grid(column=2, row=1, sticky=tk.EW, padx=5, pady=5, ipadx=2, ipady=2)
 
         # view my tickets
@@ -165,7 +174,7 @@ class homescreen(tk.Canvas):  # Sub-lcassing tk.Frame
         view_my_tickets.grid(column=3, row=1, sticky=tk.EW, padx=5, pady=5, ipadx=2, ipady=2)
 
         # Close button
-        close_button = ttk.Button(self, text="Exit").grid(column=3, row=2, pady=15)
+        close_button = ttk.Button(self, text="Exit", command=lambda: quit()).grid(column=3, row=2, pady=15)
 
 
 class view_Info(tk.Frame):
@@ -197,25 +206,25 @@ class view_Info(tk.Frame):
         # Date of Birth
         DOB_label = ttk.Label(self, text="DOB(YYYY-MM-DD):")
         DOB_label.grid(column=0, row=2, sticky=tk.EW, padx=5, pady=5)
-        DOB_entry = ttk.Label(self, text= DOB)
+        DOB_entry = ttk.Label(self, text=DOB)
         DOB_entry.grid(column=1, row=2, columnspan=3, sticky=tk.EW, padx=5, pady=5)
 
         # phone number
         phone_label = ttk.Label(self, text="Phone(NNN-NNN-NNNN):")
         phone_label.grid(column=0, row=3, sticky=tk.EW, padx=5, pady=5)
-        phone_entry = ttk.Label(self, text= Phone_num)
+        phone_entry = ttk.Label(self, text=Phone_num)
         phone_entry.grid(column=1, row=3, columnspan=3, sticky=tk.EW, padx=5, pady=5)
 
         # email
         email_label = ttk.Label(self, text="Email:")
         email_label.grid(column=0, row=4, sticky=tk.EW, padx=5, pady=5)
-        email_entry = ttk.Label(self, text= Email)
+        email_entry = ttk.Label(self, text=Email)
         email_entry.grid(column=1, row=4, columnspan=3, sticky=tk.EW, padx=5, pady=5)
 
         # payment
         payment_label = ttk.Label(self, text="Credit Card Number:")
         payment_label.grid(column=0, row=5, sticky=tk.EW, padx=5, pady=5)
-        payment_entry = ttk.Label(self, text= Payment)
+        payment_entry = ttk.Label(self, text=Payment)
         payment_entry.grid(column=1, row=5, columnspan=3, sticky=tk.EW, padx=5, pady=5)
 
         # go back button
@@ -225,7 +234,7 @@ class view_Info(tk.Frame):
 
 @dataclass
 class Ticket:
-    TID: int
+    TID: str
     CID: int
     Flight_Info: int
 
@@ -245,6 +254,7 @@ class TicketFrame:
         self.CID_Info = ttk.Label(self.root, text=ticketObj.CID)
         self.Flight_Info = ttk.Label(self.root, text=ticketObj.Flight_Info)
 
+    # add this ticket frame to the grid
     def grid(self, row):
         self.row = row
 
@@ -252,68 +262,26 @@ class TicketFrame:
         self.CID_Info.grid(column=1, row=row, sticky=tk.EW, padx=5, pady=5)
         self.Flight_Info.grid(column=2, row=row, sticky=tk.EW, padx=5, pady=5)
 
+    # forget this ticket frame and remove it from the grid
+    def grid_forget(self):
+        self.TID_Info.grid_forget()
+        self.CID_Info.grid_forget()
+        self.Flight_Info.grid_forget()
 
-class MyTickets(tk.Frame):  # Sub-lcassing tk.Frame
 
-    payment_entry: ttk.Label
+class MyTickets(tk.Frame):
 
-    def retreiveTickets(self, info):
-        self.tickets = []
-        self.ticketFrames = []
-
-        # create tickets and ticketFrames
-        num = 1
-        for i in info:
-            num = num + 1
-            newTicket = Ticket(i[0], i[1], i[2])
-            self.tickets.append(newTicket)
-
-            newTicketFrame = TicketFrame(root=self, ticketObj=newTicket)
-            newTicketFrame.grid(row=num)
-            self.ticketFrames.append(newTicketFrame)
-
-    # returns the current value for num
-    def renderTickets(self):
-
-        num = 1
-        for ticketFrame in self.ticketFrames:
-            num = num + 1
-            ticketFrame.grid(row=num)
-        return num
-
-    def render(self, refreshPaymentInfo=False):
-
-        if(refreshPaymentInfo):
-            self.payment_label.destroy()
-            self.payment_entry.destroy()
-            self.view_all_flights.destroy()
-            self.view_my_tickets.destroy()
-
-        #render all the tickets!
-        num = self.renderTickets()
-        print(num)
-        self.payment_label = ttk.Label(self, text="Cancel Ticket (Tid):")
-        self.payment_label.grid(column=0, row=num+1, sticky=tk.EW, padx=5, pady=5)
-
-        self.payment_entry = ttk.Entry(self)
-        self.payment_entry.grid(column=1, row=num+1, columnspan=3, sticky=tk.EW, padx=5, pady=5)
-
-        #Go back to home screen
-        self.view_all_flights = ttk.Button(self, text="Go Back", command=lambda: self.master.switch_Canvas(homescreen))
-        self.view_all_flights.grid(column=2, row=num+2, sticky=tk.EW, padx=5, pady=5, ipadx=2, ipady=2)
-
-        #Remove ticket based on given TID
-        self.view_my_tickets = ttk.Button(self, text="Submit Cancellation", command= lambda: self.submit_cancel())
-        self.view_my_tickets.grid(column=1, row=num+2, sticky=tk.EW, padx=5, pady=5, ipadx=2, ipady=2)
+    ticketFrames: list
 
     def __init__(self, master, *args, **kwargs):
-        # self is now an istance of tk.Frame
+
         tk.Frame.__init__(self, master, *args, **kwargs)
 
-        # welcome user label
+        # welcome label
         welcome_label = ttk.Label(self, text=f"Your Tickets")
         welcome_label.grid(column=1, row=0, columnspan=4, sticky=tk.EW)
 
+        # table headers
         TID_label = ttk.Label(self, text="TID")
         TID_label.grid(column=0, row=1, sticky=tk.EW, padx=5, pady=5)
         CID_label = ttk.Label(self, text="CID")
@@ -321,34 +289,70 @@ class MyTickets(tk.Frame):  # Sub-lcassing tk.Frame
         Flight_label = ttk.Label(self, text="Flight Number")
         Flight_label.grid(column=2, row=1, sticky=tk.EW, padx=5, pady=5)
 
-        # mySQL stuff
+        # mySQL stuff - query TB to receive tickets
         mycursor.execute(f"Select * from Ticket where Cid = {newID}")
         info = mycursor.fetchall()
 
         # generate all the tickets!
         self.retreiveTickets(info)
 
-        self.render()
+        # render all the tickets and the cancel ticket fields
+        curr_row = 1
+        for ticketFrame in self.ticketFrames:
+            curr_row = curr_row + 1
+            ticketFrame.grid(row=curr_row)
+
+        # Cancel ticket section
+        cancel_ticket_label = ttk.Label(self, text="Cancel Ticket (Tid):")
+        cancel_ticket_label.grid(column=0, row=curr_row + 1, sticky=tk.EW, padx=5, pady=5)
+
+        # field to type tid
+        self.cancel_tid_entry = ttk.Entry(self)
+        self.cancel_tid_entry.grid(column=1, row=curr_row + 1, columnspan=3, sticky=tk.EW, padx=5, pady=5)
+
+        # Remove ticket based on given TID
+        cancel_ticket_button = ttk.Button(self, text="Submit Cancellation", command=lambda: self.submit_cancel())
+        cancel_ticket_button.grid(column=1, row=curr_row + 2, sticky=tk.EW, padx=5, pady=5, ipadx=2, ipady=2)
+
+        # Go back to home screen
+        go_back_button = ttk.Button(self, text="Go Back", command=lambda: self.master.switch_Canvas(homescreen))
+        go_back_button.grid(column=2, row=curr_row + 2, sticky=tk.EW, padx=5, pady=5, ipadx=2, ipady=2)
+
+        self.grid(column=0, row=2, columnspan=3)
+
+        # takes the tuples returned by an SQL query and converts them to valid ticketFrame objects
+
+    def retreiveTickets(self, info):
+        self.ticketFrames = []
+
+        # create tickets and ticketFrames
+        for i in info:
+            newTicket = Ticket(i[0], i[1], i[2])
+
+            newTicketFrame = TicketFrame(root=self, ticketObj=newTicket)
+            self.ticketFrames.append(newTicketFrame)
 
     def submit_cancel(self):
-        cancel_TID = self.payment_entry.get()
+        cancel_TID = int(self.cancel_tid_entry.get())
 
-        # mySQL stuff
+        # mySQL - delete the current ticket from the database, add the corresponding spot back to the flight!
+
+
+        flight_num = 0
+        spots = 0
+
+        for row, i in enumerate(self.ticketFrames):
+            if (i.ticketObj.TID == cancel_TID):
+                flight_num = i.ticketObj.Flight_Info
+                mycursor.execute(f"SELECT Spots_Available FROM Flight WHERE Flight_Num = {flight_num}")
+                spots = int(mycursor.fetchall()[0][0])
+                self.ticketFrames[row].grid_forget()
+                del self.ticketFrames[row]
+        
         mycursor.execute(f"DELETE FROM Ticket WHERE Tid = {cancel_TID}")
+        mycursor.execute(f"UPDATE Flight SET Spots_Available = {spots} + 1 WHERE Flight_num = {flight_num}")
         mydb.commit()
 
-        # generate new tickets list
-
-        # mySQL stuff
-        mycursor.execute(f"Select * from Ticket where Cid = {newID}")
-        info = mycursor.fetchall()
-        self.retreiveTickets(info)
-
-        # re-render thing
-        self.render(refreshPaymentInfo=True)
-
-        # re-render thing
-        self.render()
 
 @dataclass
 class Flight():
@@ -405,7 +409,6 @@ class flightFrame:
         self.spots_available_label.grid(column=4, row=row, padx=4, pady=2, sticky=tk.EW)
         self.gate_label.grid(column=5, row=row, padx=4, pady=2, sticky=tk.EW)
 
-
         # TODO add buy button
         if (newID != ''):
             self.buy_a_ticket = ttk.Button(
@@ -426,7 +429,8 @@ class flightFrame:
         mycursor.execute(sql, vals)
         mydb.commit()
 
-        mycursor.execute(f"UPDATE Flight SET Spots_Available = {self.flightObj.spots_available} - 1 WHERE Flight_num = {self.flightObj.flight_num}")
+        mycursor.execute(
+            f"UPDATE Flight SET Spots_Available = {self.flightObj.spots_available} - 1 WHERE Flight_num = {self.flightObj.flight_num}")
         mydb.commit()
 
         # decrease the number of available spots
@@ -455,9 +459,11 @@ class flightListFrame(tk.Frame):
 
         # go back button
         back_button = ttk.Button(self, text="Back", command=lambda: master.switch_Canvas(homescreen)).grid(
-            column=6, row=row+1, pady=10)
+            column=6, row=row + 1, pady=10)
 
-flightCode : str
+
+flightCode: str
+
 
 class flightListSearchFrameList(tk.Frame):
 
@@ -477,7 +483,7 @@ class flightListSearchFrameList(tk.Frame):
 
         # go back button
         back_button = ttk.Button(self, text="Back", command=lambda: master.switch_Canvas(homescreen)).grid(
-            column=6, row=row+1, pady=10)
+            column=6, row=row + 1, pady=10)
 
 
 class flightListSearchFrame(tk.Frame):
